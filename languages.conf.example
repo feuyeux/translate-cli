@@ -1,0 +1,47 @@
+# Language Configuration File
+# 
+# This file defines the target languages for batch translation and the translation engine to use.
+# Each line should contain a language code and name separated by a delimiter.
+#
+# Supported delimiters: colon (:), comma (,), or equals sign (=)
+# Format: <language-code><delimiter><language-name>
+#
+# Examples:
+#   en:English
+#   de,German
+#   fr=French
+#
+# Lines starting with # are treated as comments and ignored.
+# Blank lines are also ignored.
+#
+# To use this file:
+# 1. Copy this file to 'languages.conf' in your working directory
+# 2. Customize the language list and engine as needed
+# 3. Run the translation tool (it will automatically detect the file)
+#
+# Alternative configuration methods:
+# - Use --config or -c flag: translate --config /path/to/languages.conf
+# - Set environment variable: TRANSLATE_CONFIG_PATH=/path/to/languages.conf
+#
+# Priority: CLI option > Environment variable > Default location (./languages.conf)
+
+# Note: This tool uses Google Translate as the translation engine.
+# Bing Translator is no longer supported as the public API requires authentication.
+
+# Default language configurations
+en:英语
+de:德语
+fr:法语
+es:西班牙语
+ru:俄语
+el:希腊语
+hi:印地语
+ar:阿拉伯语
+ja:日语
+zh-CN:汉语
+ko:韩语
+
+# You can add more languages by following the same format:
+# pt:葡萄牙语
+# it:意大利语
+# nl:荷兰语
