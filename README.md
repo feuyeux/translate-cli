@@ -8,6 +8,7 @@
 npm install
 npm run build
 npm link
+chmod +x dist/presentation/cli/cli.js
 ```
 
 ## 使用方法
@@ -37,6 +38,15 @@ translate -p 127.0.0.1:8080 en "Hello"
 translate --config path/to/languages.conf ko "안녕하세요"
 translate -c path/to/languages.conf ko "안녕하세요"
 ```
+
+### 保存结果到文件
+
+```bash
+translate --output results.txt ko "안녕하세요"
+translate -o translations.txt en "Hello, world!"
+```
+
+当使用 `-o` 或 `--output` 选项时，翻译结果将保存到指定文件而不是显示在控制台。保存的文件内容不包含颜色代码，便于后续处理。
 
 ## 配置文件
 
@@ -89,6 +99,8 @@ Options:
   -V, --version        显示版本号
   -p, --proxy <proxy>  代理服务器 (例如: 127.0.0.1:8080)
   -c, --config <path>  配置文件路径 (默认: ./languages.conf)
+  -e, --engine <type>  翻译引擎 (google|bing，默认: google)
+  -o, --output <path>  保存结果到指定文件
   -h, --help           显示帮助信息
 ```
 

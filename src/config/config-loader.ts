@@ -20,7 +20,6 @@ class ConfigLoader {
   private static readonly ENGINE_ENV_VAR_NAME = 'TRANSLATE_ENGINE';
 
   loadConfig(configPath?: string, engineType?: EngineType): Config {
-    const warnings: string[] = [];
     const engine = this.loadEngineType(configPath, engineType);
     const configFilePath = this.findConfigFile(configPath);
 
@@ -44,7 +43,9 @@ class ConfigLoader {
       });
 
       if (parsedLanguages.languages.length === 0) {
-        console.warn('Warning: No valid language entries found in configuration file, using defaults');
+        console.warn(
+          'Warning: No valid language entries found in configuration file, using defaults'
+        );
         return {
           languages: DEFAULT_TARGET_LANGUAGES,
           engineType: engine,
@@ -96,7 +97,7 @@ class ConfigLoader {
         if (fileEngine) {
           console.warn(`Warning: Invalid engine type from configuration file: ${fileEngine}`);
         }
-      } catch (error) {
+      } catch {
         // Silently fall through to default
       }
     }
@@ -177,7 +178,9 @@ class ConfigLoader {
         if (config.code.length > 0 && config.name.length > 0) {
           languages.push(config);
         } else {
-          warnings.push(`Line ${lineNumber}: Invalid language configuration - code or name is empty`);
+          warnings.push(
+            `Line ${lineNumber}: Invalid language configuration - code or name is empty`
+          );
         }
       } else {
         warnings.push(`Line ${lineNumber}: Malformed entry - expected format: code<delimiter>name`);

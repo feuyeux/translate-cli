@@ -1,16 +1,16 @@
 /**
  * HTTP Client Module
- * 
+ *
  * This module provides a robust HTTP client with retry logic, timeout handling,
  * and comprehensive error conversion for translation service requests.
- * 
+ *
  * Key Features:
  * - Automatic retry with exponential backoff for transient failures
  * - Configurable timeout and retry settings
  * - Proxy support for network environments requiring proxies
  * - Detailed error classification and user-friendly error messages
  * - Distinguishes between retryable and non-retryable errors
- * 
+ *
  * @module http-client
  */
 
@@ -20,7 +20,7 @@ import { HTTPError } from '../errors/http-error';
 
 /**
  * Configuration options for HTTP client
- * 
+ *
  * @property timeout - Request timeout in milliseconds (default: 10000)
  * @property retries - Maximum number of retry attempts (default: 3)
  * @property proxy - Proxy server URL (e.g., 'http://proxy.example.com:8080')
@@ -40,19 +40,18 @@ export class HTTPClient {
     this.defaultTimeout = options?.timeout || 10000;
     this.defaultRetries = options?.retries || 3;
 
-    const axiosConfig: any = {
+    const axiosConfig = {
       timeout: this.defaultTimeout,
       maxRedirects: 5, // Follow redirects
       validateStatus: (status: number) => status >= 200 && status < 300, // Only accept 2xx as success
+      httpsAgent: undefined as HttpsProxyAgent<string> | undefined,
+      proxy: false as const,
     };
 
     // Configure proxy if provided
     if (options?.proxy) {
-      const proxyUrl = options.proxy.startsWith('http') 
-        ? options.proxy 
-        : `http://${options.proxy}`;
+      const proxyUrl = options.proxy.startsWith('http') ? options.proxy : `http://${options.proxy}`;
       axiosConfig.httpsAgent = new HttpsProxyAgent(proxyUrl);
-      axiosConfig.proxy = false; // Disable axios default proxy handling
     }
 
     this.client = axios.create(axiosConfig);
@@ -60,7 +59,7 @@ export class HTTPClient {
 
   /**
    * Perform GET request with automatic retry logic
-   * 
+   *
    * @param url - URL to request
    * @param options - Optional request configuration (timeout, retries)
    * @returns Response body as string
@@ -72,7 +71,7 @@ export class HTTPClient {
 
   /**
    * Perform POST request with automatic retry logic
-   * 
+   *
    * @param url - URL to request
    * @param data - Request body data
    * @param options - Optional request configuration (timeout, retries)
@@ -80,19 +79,24 @@ export class HTTPClient {
    * @returns Response body as string
    * @throws HTTPError with detailed error information if request fails after all retries
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async post(url: string, data: any, options?: HTTPOptions, headers?: Record<string, string>): Promise<string> {
+
+  async post(
+    url: string,
+    data: unknown,
+    options?: HTTPOptions,
+    headers?: Record<string, string>
+  ): Promise<string> {
     return this.requestWithRetry('POST', url, data, options, headers);
   }
 
   /**
    * Execute HTTP request with exponential backoff retry logic
-   * 
+   *
    * Retry Strategy:
    * - Retries only on transient failures (network errors, 5xx, 429)
    * - Uses exponential backoff: 2^attempt * 100ms (100ms, 200ms, 400ms, ...)
    * - Stops retrying on non-retryable errors (4xx except 429)
-   * 
+   *
    * @param method - HTTP method ('GET' or 'POST')
    * @param url - URL to request
    * @param data - Request body data (for POST requests)
@@ -105,8 +109,7 @@ export class HTTPClient {
   private async requestWithRetry(
     method: 'GET' | 'POST',
     url: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data?: any,
+    data?: unknown,
     options?: HTTPOptions,
     headers?: Record<string, string>
   ): Promise<string> {
@@ -148,16 +151,16 @@ export class HTTPClient {
 
   /**
    * Determine if an error is retryable
-   * 
+   *
    * Retryable errors include:
    * - Network errors (no response received)
    * - HTTP 5xx server errors (500, 502, 503, 504)
    * - HTTP 429 rate limiting
-   * 
+   *
    * Non-retryable errors include:
    * - HTTP 4xx client errors (except 429)
    * - Non-axios errors
-   * 
+   *
    * @param error - Error object to evaluate
    * @returns true if the error should trigger a retry, false otherwise
    * @private
@@ -181,20 +184,20 @@ export class HTTPClient {
 
   /**
    * Convert axios errors to HTTPError with meaningful messages
-   * 
+   *
    * This method categorizes errors and provides user-friendly messages:
-   * 
+   *
    * Network Errors (no statusCode):
    * - ECONNABORTED / timeout: "翻译请求超时"
    * - ENOTFOUND / EAI_AGAIN: "无法解析翻译服务地址"
    * - Other network errors: "无法连接到翻译服务"
-   * 
+   *
    * HTTP Status Errors (with statusCode):
    * - 400: "无效的翻译请求"
    * - 429: "请求过于频繁，请稍后重试"
    * - 500/502/503/504: "翻译服务暂时不可用"
    * - Other: "翻译失败：{statusCode}"
-   * 
+   *
    * @param error - Original error from axios
    * @returns HTTPError with user-friendly message and structured error information
    * @private
@@ -239,7 +242,7 @@ export class HTTPClient {
 
   /**
    * Sleep utility for implementing retry delays
-   * 
+   *
    * @param ms - Milliseconds to sleep
    * @returns Promise that resolves after the specified delay
    * @private

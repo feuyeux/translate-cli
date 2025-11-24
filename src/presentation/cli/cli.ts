@@ -24,55 +24,84 @@ async function main() {
     .option('-p, --proxy <proxy>', 'Proxy server (e.g., 127.0.0.1:55497)')
     .option('-c, --config <path>', 'Path to configuration file (default: ./languages.conf)')
     .option('-e, --engine <type>', 'Translation engine to use (google|bing)', 'google')
-    .action(async (sourceLanguage: string, text: string, options: { proxy?: string; config?: string; engine?: string }) => {
-      let config;
-      try {
-        // Validate engine option against available engines
-        const availableEngines = TranslationEngineFactory.getAvailableEngines();
-        if (options.engine && !availableEngines.includes(options.engine as EngineType)) {
-          console.error(`Invalid engine: ${options.engine}`);
-          console.error(`Available engines: ${availableEngines.join(', ')}`);
+    .option('-o, --output <path>', 'Save results to specified file')
+    .action(
+      async (
+        sourceLanguage: string,
+        text: string,
+        options: { proxy?: string; config?: string; engine?: string; output?: string }
+      ) => {
+        let config;
+        try {
+          // Validate engine option against available engines
+          const availableEngines = TranslationEngineFactory.getAvailableEngines();
+          if (options.engine && !availableEngines.includes(options.engine as EngineType)) {
+            console.error(`Invalid engine: ${options.engine}`);
+            console.error(`Available engines: ${availableEngines.join(', ')}`);
+            process.exit(1);
+          }
+
+          // Load configuration including languages and engine type
+          config = loadConfig(options.config, options.engine as EngineType);
+
+          // Validate input
+          const validationResult = validateInput(sourceLanguage, text, config.languages);
+
+          if (!validationResult.valid) {
+            // Display validation errors
+            console.error('输入验证失败:');
+            validationResult.errors.forEach((error) => {
+              console.error(`  - ${error}`);
+            });
+            process.exit(1);
+          }
+
+          // Perform batch translation
+          const translationService = new TranslationService(
+            config.engineType,
+            undefined,
+            options.proxy,
+            config.languages
+          );
+          const targetLanguageCodes = config.languages.map((lang) => lang.code);
+          const results = await translationService.batchTranslate(
+            sourceLanguage,
+            text,
+            targetLanguageCodes
+          );
+
+          // Format and display results
+          const formatter = new ResultFormatter();
+          const output = formatter.format(results, { engineName: config.engineType });
+
+          // Save to file if output path is specified
+          if (options.output) {
+            try {
+              await formatter.saveToFile(output, options.output);
+              console.log(`\n翻译结果已保存到: ${options.output}\n`);
+            } catch (error) {
+              console.error(`保存文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
+              process.exit(1);
+            }
+          } else {
+            // Display to console if no output file specified
+            console.log('\n翻译结果:\n');
+            console.log(output);
+            console.log('');
+          }
+          process.exit(0);
+        } catch (error) {
+          // Handle unexpected errors
+          const formatter = new ResultFormatter();
+          if (error instanceof Error) {
+            console.error(formatter.formatError(error, config?.engineType));
+          } else {
+            console.error('发生未知错误');
+          }
           process.exit(1);
         }
-
-        // Load configuration including languages and engine type
-        config = loadConfig(options.config, options.engine as EngineType);
-
-        // Validate input
-        const validationResult = validateInput(sourceLanguage, text, config.languages);
-
-        if (!validationResult.valid) {
-          // Display validation errors
-          console.error('输入验证失败:');
-          validationResult.errors.forEach((error) => {
-            console.error(`  - ${error}`);
-          });
-          process.exit(1);
-        }
-
-        // Perform batch translation
-        const translationService = new TranslationService(config.engineType, undefined, options.proxy, config.languages);
-        const targetLanguageCodes = config.languages.map((lang) => lang.code);
-        const results = await translationService.batchTranslate(sourceLanguage, text, targetLanguageCodes);
-
-        // Format and display results
-        const formatter = new ResultFormatter();
-        const output = formatter.format(results, { engineName: config.engineType });
-        console.log('\n翻译结果:\n');
-        console.log(output);
-        console.log('');
-        process.exit(0);
-      } catch (error) {
-        // Handle unexpected errors
-        const formatter = new ResultFormatter();
-        if (error instanceof Error) {
-          console.error(formatter.formatError(error, config?.engineType));
-        } else {
-          console.error('发生未知错误');
-        }
-        process.exit(1);
       }
-    });
+    );
 
   // Add help information about configuration and usage
   program.addHelpText(
@@ -119,6 +148,8 @@ async function main() {
   $ translate -c ./my-languages.conf ko "안녕하세요"
   $ translate -e bing ko "안녕하세요"
   $ translate --engine google en "Hello, world!"
+  $ translate -o results.txt ko "안녕하세요"
+  $ translate --output translations.txt en "Hello, world!"
   `
   );
 

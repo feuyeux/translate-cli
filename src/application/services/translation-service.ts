@@ -5,7 +5,13 @@
 
 import { HTTPClient } from '@infrastructure/http';
 import { LanguageConfig, DEFAULT_TARGET_LANGUAGES } from '@config/index';
-import { TranslationRequest, TranslationResult, EngineType, ITranslationEngine, TranslationEngineFactory } from '@domain/engines';
+import {
+  TranslationRequest,
+  TranslationResult,
+  EngineType,
+  ITranslationEngine,
+  TranslationEngineFactory,
+} from '@domain/engines';
 
 export class TranslationService {
   private engine: ITranslationEngine;
@@ -24,7 +30,7 @@ export class TranslationService {
     proxy?: string,
     targetLanguages?: LanguageConfig[]
   );
-  
+
   /**
    * Legacy constructor signature for backward compatibility
    * @param httpClient - Optional HTTP client instance
@@ -32,7 +38,7 @@ export class TranslationService {
    * @param targetLanguages - Optional array of target language configurations
    */
   constructor(httpClient?: HTTPClient, proxy?: string, targetLanguages?: LanguageConfig[]);
-  
+
   /**
    * Implementation of constructor with overloads
    */
@@ -51,7 +57,7 @@ export class TranslationService {
     if (typeof engineTypeOrHttpClient === 'string') {
       // New signature: (engineType, httpClient?, proxy?, targetLanguages?)
       engineType = engineTypeOrHttpClient;
-      
+
       // Check if second parameter is HTTPClient or string (proxy)
       if (httpClientOrProxy instanceof HTTPClient) {
         httpClient = httpClientOrProxy;
@@ -80,7 +86,7 @@ export class TranslationService {
 
     // Create translation engine using factory
     this.engine = TranslationEngineFactory.createEngine(engineType, client);
-    
+
     // Set target languages
     this.targetLanguages = languages || DEFAULT_TARGET_LANGUAGES;
   }
@@ -150,6 +156,4 @@ export class TranslationService {
       }
     });
   }
-
-
 }

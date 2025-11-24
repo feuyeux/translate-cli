@@ -4,6 +4,7 @@
  */
 
 import chalk from 'chalk';
+import { promises as fs } from 'node:fs';
 import { TranslationResult } from '@domain/engines';
 import { TARGET_LANGUAGES } from '@config/index';
 
@@ -63,13 +64,38 @@ export class ResultFormatter {
   private normalizeErrorMessage(message: string, engineName?: string): string {
     // Remove any existing engine prefixes like [google], [bing], etc.
     let normalized = message.replace(/^\[[\w-]+\]\s*/, '');
-    
+
     // Add engine name prefix if provided
     if (engineName) {
       normalized = `[${engineName}] ${normalized}`;
     }
-    
+
     return normalized;
+  }
+
+  /**
+   * Save formatted results to a file
+   * Strips ANSI color codes before saving
+   */
+  async saveToFile(formattedOutput: string, filePath: string): Promise<void> {
+    // Remove ANSI color codes for clean file output
+    const cleanOutput = this.stripAnsiCodes(formattedOutput);
+
+    try {
+      await fs.writeFile(filePath, cleanOutput, 'utf-8');
+    } catch (error) {
+      throw new Error(
+        `无法写入文件 ${filePath}: ${error instanceof Error ? error.message : '未知错误'}`
+      );
+    }
+  }
+
+  /**
+   * Strip ANSI color codes from text
+   */
+  private stripAnsiCodes(text: string): string {
+    // eslint-disable-next-line no-control-regex
+    return text.replace(/\x1b\[[0-9;]*m/g, '');
   }
 
   /**

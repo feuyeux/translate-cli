@@ -1,9 +1,9 @@
 /**
  * Translation Engine Factory
- * 
+ *
  * Factory class for creating translation engine instances.
  * Provides a centralized way to instantiate engines and query available engine types.
- * 
+ *
  * @module engine-factory
  */
 
@@ -17,12 +17,12 @@ import { GoogleTranslationEngine } from './google-engine';
 export class TranslationEngineFactory {
   /**
    * Create a translation engine instance
-   * 
+   *
    * @param engineType - Type of engine to create (currently only 'google')
    * @param httpClient - HTTP client instance for making requests
    * @returns Translation engine instance implementing ITranslationEngine
    * @throws Error if engine type is not recognized
-   * 
+   *
    * @example
    * ```typescript
    * const httpClient = new HTTPClient();
@@ -42,7 +42,7 @@ export class TranslationEngineFactory {
 
   /**
    * Get list of all available engine types
-   * 
+   *
    * @returns Array of supported engine type identifiers
    */
   static getAvailableEngines(): EngineType[] {
